@@ -109,31 +109,7 @@ const ResearcherOnboarding = () => {
         </div>
 
         {/* ORCID Login Option */}
-        <div className="bg-white rounded-2xl shadow-xl p-8 mb-6">
-          <div className="text-center">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Quick Sign-up with ORCID
-            </h3>
-            <p className="text-sm text-gray-600 mb-6">
-              Connect your ORCID iD to automatically import your research profile, publications, and affiliations.
-            </p>
-            <a
-              href={`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/auth/orcid`}
-              className="inline-flex items-center justify-center gap-3 w-full max-w-md px-6 py-3 bg-[#a6ce39] hover:bg-[#94b933] text-white font-medium rounded-lg transition-colors duration-200"
-            >
-              <svg width="24" height="24" viewBox="0 0 256 256" fill="currentColor">
-                <path d="M256,128c0,70.7-57.3,128-128,128C57.3,256,0,198.7,0,128C0,57.3,57.3,0,128,0C198.7,0,256,57.3,256,128z M88,64c-8.8,0-16,7.2-16,16s7.2,16,16,16c8.8,0,16-7.2,16-16S96.8,64,88,64z M192,160c0-26.5-21.5-48-48-48h-8v96h8C170.5,208,192,186.5,192,160z M88,112v96h16v-96H88z"/>
-              </svg>
-              Continue with ORCID
-            </a>
-            <div className="mt-6 flex items-center">
-              <div className="flex-1 border-t border-gray-300"></div>
-              <span className="px-4 text-sm text-gray-500">or sign up manually</span>
-              <div className="flex-1 border-t border-gray-300"></div>
-            </div>
-          </div>
-        </div>
-
+        
         {/* Progress Bar */}
         <div className="mb-8">
           <div className="flex justify-between items-center mb-2">
