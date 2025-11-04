@@ -1,0 +1,30 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir:*)",
+      "Bash(mkdir:*)",
+      "Bash(npm create:*)",
+      "Bash(npm install:*)",
+      "Bash(npx tailwindcss:*)",
+      "Bash(npm init:*)",
+      "Bash(tree:*)",
+      "Bash(npm run dev:*)",
+      "Bash(taskkill:*)",
+      "Bash(pkill:*)",
+      "Bash(nul)",
+      "Bash(mysql:*)",
+      "Bash(where:*)",
+      "Bash(npm start)",
+      "Bash(timeout /t 3)",
+      "Bash(node scripts/fixAdditionalConditions.js:*)",
+      "Bash(node scripts/addDefaultForums.js:*)",
+      "Bash(node scripts/fixResearcherData.js:*)",
+      "Bash(curl:*)",
+      "Bash(node:*)",
+      "Bash(timeout:*)",
+      "Bash(del backendtestOrcid.js)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
