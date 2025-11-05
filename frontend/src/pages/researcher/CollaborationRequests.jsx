@@ -9,12 +9,13 @@ const CollaborationRequests = () => {
 
   useEffect(() => {
     loadRequests();
-  }, [activeTab]);
+  }, []);
 
   const loadRequests = async () => {
     try {
       setLoading(true);
-      const response = await meetingsApi.getCollaborations({ status: activeTab });
+      // Load all requests without status filter to get accurate counts for all tabs
+      const response = await meetingsApi.getCollaborations({});
       setRequests(response.data);
       setLoading(false);
     } catch (error) {
@@ -46,13 +47,18 @@ const CollaborationRequests = () => {
     }
   };
 
-  const tabs = [
-    { id: 'pending', label: 'Pending Requests', icon: '⏳', count: requests.filter(r => r.status === 'pending').length },
-    { id: 'active', label: 'Active Collaborations', icon: '🤝', count: requests.filter(r => r.status === 'active').length },
-    { id: 'declined', label: 'Declined', icon: '❌', count: requests.filter(r => r.status === 'declined').length },
-  ];
-
   const filteredRequests = requests.filter(req => req.status === activeTab);
+
+  // Calculate counts for each status from all requests
+  const pendingCount = requests.filter(r => r.status === 'pending').length;
+  const activeCount = requests.filter(r => r.status === 'active').length;
+  const declinedCount = requests.filter(r => r.status === 'declined').length;
+
+  const tabs = [
+    { id: 'pending', label: 'Pending Requests', count: pendingCount },
+    { id: 'active', label: 'Active Collaborations', count: activeCount },
+    { id: 'declined', label: 'Declined', count: declinedCount },
+  ];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-white">
@@ -78,14 +84,13 @@ const CollaborationRequests = () => {
                     : 'bg-gray-50 text-gray-700 hover:bg-gray-100 border-2 border-gray-200'
                 }`}
               >
-                <span className="text-xl">{tab.icon}</span>
                 <span>{tab.label}</span>
                 <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${
                   activeTab === tab.id
                     ? 'bg-white text-blue-600'
                     : 'bg-white text-gray-700 border border-gray-300'
                 }`}>
-                  {filteredRequests.length}
+                  {tab.count}
                 </span>
               </button>
             ))}
@@ -104,11 +109,6 @@ const CollaborationRequests = () => {
           <div>
             {filteredRequests.length === 0 ? (
               <div className="bg-white rounded-2xl shadow-md border-2 border-gray-100 p-12 text-center">
-                <div className="text-6xl mb-4">
-                  {activeTab === 'pending' && '📭'}
-                  {activeTab === 'active' && '🤝'}
-                  {activeTab === 'declined' && '❌'}
-                </div>
                 <h3 className="text-2xl font-bold text-gray-800 mb-2">
                   {activeTab === 'pending' && 'No pending requests'}
                   {activeTab === 'active' && 'No active collaborations'}
@@ -189,14 +189,14 @@ const CollaborationRequests = () => {
                               className="px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold rounded-xl transition-all transform hover:scale-105 shadow-md"
                               title="Accept collaboration request"
                             >
-                              ✓ Accept
+                              Accept
                             </button>
                             <button
                               onClick={() => handleDecline(request.id)}
                               className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white font-bold rounded-xl transition-all transform hover:scale-105 shadow-md"
                               title="Decline collaboration request"
                             >
-                              ✕ Decline
+                              Decline
                             </button>
                           </div>
                         )}
