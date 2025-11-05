@@ -121,6 +121,7 @@ export const ai = {
   generateQuery: (data) => api.post('/ai/generate-query', data),
   answerQuestion: (data) => api.post('/ai/answer-question', data),
   generateForumResponse: (data) => api.post('/ai/generate-forum-response', data),
+  chat: (data) => api.post('/ai/chat', data),
 };
 
 export default api;

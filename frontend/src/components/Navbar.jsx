@@ -64,9 +64,13 @@ const Navbar = () => {
       { path: '/profile', label: 'Profile' },
     ];
 
-    // Add Messages and Meetings for all users
+    // Add Meetings for all users
     links.unshift({ path: '/meetings', label: 'Meetings' });
-    links.unshift({ path: '/messages', label: 'Messages' });
+
+    // Add Messages only for researchers
+    if (userType === 'researcher') {
+      links.unshift({ path: '/messages', label: 'Messages' });
+    }
 
     return links;
   };

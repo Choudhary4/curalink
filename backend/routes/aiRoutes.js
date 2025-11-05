@@ -30,4 +30,7 @@ router.post('/answer-question', aiController.answerQuestion);
 // Generate forum response draft for researchers
 router.post('/generate-forum-response', aiController.generateForumResponse);
 
+// Chat with AI assistant
+router.post('/chat', aiController.chat);
+
 module.exports = router;

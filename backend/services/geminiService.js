@@ -317,3 +317,52 @@ Response draft:`;
     throw new Error('Failed to generate forum response');
   }
 };
+
+// Chat with AI assistant
+exports.chat = async (message, conversationHistory = []) => {
+  try {
+    initializeGemini();
+
+    if (!model) {
+      throw new Error('Gemini API not initialized');
+    }
+
+    // Build conversation context
+    let contextPrompt = `You are Cura, an AI medical assistant for the Curalink platform. Your role is to help patients and researchers with:
+- Understanding medical research and publications
+- Finding information about clinical trials
+- Explaining medical terms in simple language
+- Answering general health questions
+- Guiding users to appropriate resources
+
+Guidelines:
+- Be friendly, empathetic, and professional
+- Use clear, simple language that patients can understand
+- For medical questions, provide general information but always remind users to consult healthcare providers for personalized advice
+- Never diagnose or prescribe treatments
+- Be supportive and encouraging
+- If unsure, acknowledge limitations and suggest consulting professionals
+- Keep responses concise (under 200 words unless more detail is needed)
+
+`;
+
+    // Add conversation history if provided
+    if (conversationHistory && conversationHistory.length > 0) {
+      contextPrompt += '\nPrevious conversation:\n';
+      conversationHistory.slice(-5).forEach(msg => {
+        contextPrompt += `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}\n`;
+      });
+      contextPrompt += '\n';
+    }
+
+    contextPrompt += `Current message: ${message}\n\nYour response:`;
+
+    const result = await model.generateContent(contextPrompt);
+    const response = await result.response;
+    return response.text().trim();
+
+  } catch (error) {
+    console.error('Error in chat:', error.message);
+    throw new Error('Failed to process chat message');
+  }
+};

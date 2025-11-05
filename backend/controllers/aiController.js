@@ -168,6 +168,30 @@ exports.generateForumResponse = async (req, res) => {
   }
 };
 
+// Chat with AI assistant
+exports.chat = async (req, res) => {
+  try {
+    const { message, conversationHistory } = req.body;
+
+    if (!message) {
+      return res.status(400).json({ error: 'Message is required' });
+    }
+
+    if (!geminiService.isAvailable()) {
+      return res.status(503).json({
+        error: 'AI service is not available'
+      });
+    }
+
+    const response = await geminiService.chat(message, conversationHistory);
+
+    res.json({ response });
+  } catch (error) {
+    console.error('Chat error:', error);
+    res.status(500).json({ error: 'Failed to process chat message' });
+  }
+};
+
 // Check if AI services are available
 exports.checkStatus = async (req, res) => {
   try {

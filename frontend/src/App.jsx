@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar';
+import Chatbot from './components/Chatbot';
 import LandingPage from './pages/LandingPage';
 import Login from './pages/Login';
 import PatientOnboarding from './pages/patient/PatientOnboarding';
@@ -22,11 +23,13 @@ import OrcidCallback from './pages/OrcidCallback';
 const Layout = ({ children }) => {
   const location = useLocation();
   const hideNavbar = ['/', '/login', '/patient/onboarding', '/researcher/onboarding', '/auth/orcid/callback'].includes(location.pathname);
+  const showChatbot = !['/login', '/patient/onboarding', '/researcher/onboarding', '/auth/orcid/callback'].includes(location.pathname);
 
   return (
     <>
       {!hideNavbar && <Navbar />}
       {children}
+      {showChatbot && <Chatbot />}
     </>
   );
 };

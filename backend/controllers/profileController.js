@@ -80,11 +80,19 @@ exports.updateProfile = async (req, res) => {
         if (allowedFields.includes(field)) {
           // Escape field names with backticks to handle reserved keywords like 'condition'
           updates.push(`\`${field}\` = ?`);
-          values.push(
-            field === 'additional_conditions'
-              ? JSON.stringify(otherFields[field])
-              : otherFields[field]
-          );
+
+          let value = otherFields[field];
+
+          // Handle JSON fields
+          if (field === 'additional_conditions') {
+            value = JSON.stringify(value);
+          }
+          // Handle integer fields - convert empty string to null
+          else if (field === 'age') {
+            value = value === '' || value === null || value === undefined ? null : parseInt(value);
+          }
+
+          values.push(value);
         }
       });
 
@@ -109,11 +117,19 @@ exports.updateProfile = async (req, res) => {
         if (allowedFields.includes(field)) {
           // Escape field names with backticks for consistency
           updates.push(`\`${field}\` = ?`);
-          values.push(
-            (field === 'specialties' || field === 'research_interests')
-              ? JSON.stringify(otherFields[field])
-              : otherFields[field]
-          );
+
+          let value = otherFields[field];
+
+          // Handle JSON fields
+          if (field === 'specialties' || field === 'research_interests') {
+            value = JSON.stringify(value);
+          }
+          // Handle integer fields - convert empty string to null
+          else if (field === 'years_experience') {
+            value = value === '' || value === null || value === undefined ? null : parseInt(value);
+          }
+
+          values.push(value);
         }
       });
 
