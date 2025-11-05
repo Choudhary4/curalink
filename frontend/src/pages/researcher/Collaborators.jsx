@@ -15,6 +15,7 @@ const Collaborators = () => {
   const [pendingRequests, setPendingRequests] = useState([]);
   const [incomingRequests, setIncomingRequests] = useState([]);
   const [showChatModal, setShowChatModal] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
   const [selectedCollaborator, setSelectedCollaborator] = useState(null);
   const [chatMessage, setChatMessage] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -203,6 +204,11 @@ const Collaborators = () => {
     }
   };
 
+  const handleViewProfile = (collaborator) => {
+    setSelectedCollaborator(collaborator);
+    setShowProfileModal(true);
+  };
+
   const specialties = [...new Set(collaborators.map((c) => c.specialty))];
 
   // Pagination
@@ -328,9 +334,17 @@ const Collaborators = () => {
                         className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 p-6 border-2 border-gray-100 hover:border-blue-300"
                       >
                         <div className="flex items-start mb-4">
-                          <div className="w-16 h-16 bg-gradient-to-br from-blue-400 to-blue-600 rounded-2xl flex items-center justify-center text-white text-2xl font-bold mr-4 shadow-lg">
-                            {collaborator.name.charAt(0)}
-                          </div>
+                          {collaborator.profile_picture ? (
+                            <img
+                              src={collaborator.profile_picture}
+                              alt={collaborator.name}
+                              className="w-16 h-16 rounded-2xl object-cover mr-4 shadow-lg"
+                            />
+                          ) : (
+                            <div className="w-16 h-16 bg-gradient-to-br from-blue-400 to-blue-600 rounded-2xl flex items-center justify-center text-white text-2xl font-bold mr-4 shadow-lg">
+                              {collaborator.name.charAt(0)}
+                            </div>
+                          )}
                           <div className="flex-1">
                             <h3 className="text-lg font-bold text-gray-900">
                               {collaborator.name}
@@ -344,19 +358,7 @@ const Collaborators = () => {
                           </div>
                         </div>
 
-                        <div className="space-y-2 mb-4">
-                          <div className="flex items-center text-sm text-gray-600">
-                            <span className="mr-2">📍</span>
-                            <span>{collaborator.location}</span>
-                          </div>
-                          <div className="flex items-center text-sm text-gray-600">
-                            <span className="mr-2">📊</span>
-                            <span>
-                              {collaborator.publications} publications • h-index:{' '}
-                              {collaborator.hIndex}
-                            </span>
-                          </div>
-                        </div>
+                        
 
                         {/* Research Interests */}
                         {Array.isArray(collaborator.researchInterests) && collaborator.researchInterests.length > 0 && (
@@ -404,7 +406,10 @@ const Collaborators = () => {
                               >
                                 Send Request
                               </button>
-                              <button className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-2 px-4 rounded-xl transition-all hover:scale-105">
+                              <button
+                                onClick={() => handleViewProfile(collaborator)}
+                                className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-2 px-4 rounded-xl transition-all hover:scale-105"
+                              >
                                 View Profile
                               </button>
                             </>
@@ -441,7 +446,10 @@ const Collaborators = () => {
                               >
                                 Send Message
                               </button>
-                              <button className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-2 px-4 rounded-xl transition-all hover:scale-105">
+                              <button
+                                onClick={() => handleViewProfile(collaborator)}
+                                className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-2 px-4 rounded-xl transition-all hover:scale-105"
+                              >
                                 View Profile
                               </button>
                             </>
@@ -534,6 +542,126 @@ const Collaborators = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Profile Modal */}
+      {showProfileModal && selectedCollaborator && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto border-2 border-gray-100">
+            {/* Header */}
+            <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-6 rounded-t-2xl">
+              <div className="flex items-center">
+                {selectedCollaborator.profile_picture ? (
+                  <img
+                    src={selectedCollaborator.profile_picture}
+                    alt={selectedCollaborator.name}
+                    className="w-24 h-24 rounded-2xl object-cover border-4 border-white shadow-lg"
+                  />
+                ) : (
+                  <div className="w-24 h-24 bg-white rounded-2xl flex items-center justify-center text-blue-600 text-4xl font-bold border-4 border-white shadow-lg">
+                    {selectedCollaborator.name.charAt(0)}
+                  </div>
+                )}
+                <div className="ml-6">
+                  <h2 className="text-3xl font-bold text-white">
+                    {selectedCollaborator.name}
+                  </h2>
+                  <p className="text-blue-100 text-lg mt-1">
+                    {selectedCollaborator.email}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Body */}
+            <div className="p-6 space-y-6">
+              {/* Institution */}
+              {selectedCollaborator.institution && (
+                <div>
+                  <h3 className="text-lg font-bold text-gray-800 mb-2 flex items-center">
+                    <span className="mr-2">🏛️</span>
+                    Institution
+                  </h3>
+                  <p className="text-gray-700 bg-gray-50 p-4 rounded-xl border-2 border-gray-100">
+                    {selectedCollaborator.institution}
+                  </p>
+                </div>
+              )}
+
+              {/* Bio */}
+              {selectedCollaborator.bio && (
+                <div>
+                  <h3 className="text-lg font-bold text-gray-800 mb-2 flex items-center">
+                    <span className="mr-2">📝</span>
+                    About
+                  </h3>
+                  <p className="text-gray-700 bg-gray-50 p-4 rounded-xl border-2 border-gray-100 whitespace-pre-wrap">
+                    {selectedCollaborator.bio}
+                  </p>
+                </div>
+              )}
+
+              {/* Research Interests */}
+              {selectedCollaborator.research_interests && selectedCollaborator.research_interests.length > 0 && (
+                <div>
+                  <h3 className="text-lg font-bold text-gray-800 mb-2 flex items-center">
+                    <span className="mr-2">🔬</span>
+                    Research Interests
+                  </h3>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedCollaborator.research_interests.map((interest, index) => (
+                      <span
+                        key={index}
+                        className="px-4 py-2 bg-blue-100 text-blue-700 rounded-xl border-2 border-blue-200 font-semibold"
+                      >
+                        {interest}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Specialties */}
+              {selectedCollaborator.specialties && selectedCollaborator.specialties.length > 0 && (
+                <div>
+                  <h3 className="text-lg font-bold text-gray-800 mb-2 flex items-center">
+                    <span className="mr-2">⚡</span>
+                    Specialties
+                  </h3>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedCollaborator.specialties.map((specialty, index) => (
+                      <span
+                        key={index}
+                        className="px-4 py-2 bg-green-100 text-green-700 rounded-xl border-2 border-green-200 font-semibold"
+                      >
+                        {specialty}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="p-6 border-t-2 border-gray-100 flex gap-4">
+              <button
+                onClick={() => {
+                  setShowProfileModal(false);
+                  handleChat(selectedCollaborator);
+                }}
+                className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold py-3 px-6 rounded-xl transition-all transform hover:scale-105 shadow-md"
+              >
+                Send Message
+              </button>
+              <button
+                onClick={() => setShowProfileModal(false)}
+                className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-3 px-6 rounded-xl transition-all hover:scale-105"
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -15,6 +15,7 @@ const HealthExperts = () => {
   });
   const [followedExperts, setFollowedExperts] = useState([]);
   const [showMeetingModal, setShowMeetingModal] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
   const [selectedExpert, setSelectedExpert] = useState(null);
   const [meetingForm, setMeetingForm] = useState({
     reason: '',
@@ -41,7 +42,8 @@ const HealthExperts = () => {
 
   const loadExperts = async () => {
     try {
-      const response = await researchers.findExperts({ user_type: 'health_expert' });
+      // Don't filter by user_type to show all researchers and health experts
+      const response = await researchers.findExperts({});
       setExperts(response.data);
       setFilteredExperts(response.data);
       setLoading(false);
@@ -117,23 +119,42 @@ const HealthExperts = () => {
   const handleToggleFollow = async (expertId) => {
     try {
       if (followedExperts.includes(expertId)) {
+        // Remove from favorites
         await favoritesApi.remove('expert', expertId);
         setFollowedExperts(followedExperts.filter((id) => id !== expertId));
       } else {
-        await favoritesApi.add({
-          item_type: 'expert',
-          item_id: expertId
-        });
-        setFollowedExperts([...followedExperts, expertId]);
+        // Add to favorites
+        try {
+          await favoritesApi.add({
+            item_type: 'expert',
+            item_id: expertId
+          });
+          setFollowedExperts([...followedExperts, expertId]);
+        } catch (addError) {
+          // If already in favorites, try to remove instead
+          if (addError.response?.data?.error?.includes('already in favorites')) {
+            await favoritesApi.remove('expert', expertId);
+            // Reload the favorites to sync state
+            await loadFollowedExperts();
+          } else {
+            throw addError;
+          }
+        }
       }
     } catch (error) {
       console.error('Error toggling follow:', error);
+      alert('Error updating favorites. Please try again.');
     }
   };
 
   const handleRequestMeeting = (expert) => {
     setSelectedExpert(expert);
     setShowMeetingModal(true);
+  };
+
+  const handleViewProfile = (expert) => {
+    setSelectedExpert(expert);
+    setShowProfileModal(true);
   };
 
   const handleSubmitMeetingRequest = async (e) => {
@@ -351,6 +372,7 @@ const HealthExperts = () => {
                       expert={expert}
                       onRequestMeeting={handleRequestMeeting}
                       onToggleFollow={handleToggleFollow}
+                      onViewProfile={handleViewProfile}
                       isFollowing={followedExperts.includes(expert.id)}
                     />
                   ))}
@@ -564,6 +586,160 @@ const HealthExperts = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Profile Modal */}
+      {showProfileModal && selectedExpert && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex items-start justify-between">
+                <div className="flex items-start">
+                  {selectedExpert.profile_picture ? (
+                    <img
+                      src={selectedExpert.profile_picture}
+                      alt={selectedExpert.name}
+                      className="w-16 h-16 rounded-2xl object-cover mr-4"
+                    />
+                  ) : (
+                    <div className="w-16 h-16 bg-gradient-to-br from-primary-400 via-accent-400 to-accent-600 rounded-2xl flex items-center justify-center text-white text-2xl font-bold mr-4">
+                      {selectedExpert.name?.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-900">{selectedExpert.name}</h2>
+                    <p className="text-primary-600 font-bold uppercase tracking-wide mt-1">
+                      {selectedExpert.specialty || 'Researcher'}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowProfileModal(false)}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6">
+              {/* Contact Information */}
+              <div className="mb-6">
+                <h3 className="text-lg font-bold text-gray-900 mb-3">Contact Information</h3>
+                <div className="space-y-2">
+                  {selectedExpert.email && (
+                    <div className="flex items-center text-gray-700">
+                      <svg className="w-5 h-5 text-primary-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                      </svg>
+                      <span>{selectedExpert.email}</span>
+                    </div>
+                  )}
+                  {selectedExpert.location && (
+                    <div className="flex items-center text-gray-700">
+                      <svg className="w-5 h-5 text-primary-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                      <span>{selectedExpert.location}</span>
+                    </div>
+                  )}
+                  {selectedExpert.institution && (
+                    <div className="flex items-center text-gray-700">
+                      <svg className="w-5 h-5 text-primary-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                      </svg>
+                      <span>{selectedExpert.institution}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Bio */}
+              {selectedExpert.bio && (
+                <div className="mb-6">
+                  <h3 className="text-lg font-bold text-gray-900 mb-3">About</h3>
+                  <p className="text-gray-700 leading-relaxed">{selectedExpert.bio}</p>
+                </div>
+              )}
+
+              {/* Experience */}
+              {selectedExpert.years_experience && (
+                <div className="mb-6">
+                  <h3 className="text-lg font-bold text-gray-900 mb-3">Experience</h3>
+                  <p className="text-gray-700">{selectedExpert.years_experience} years of research experience</p>
+                </div>
+              )}
+
+              {/* Specializations */}
+              {selectedExpert.specialties && selectedExpert.specialties.length > 0 && (
+                <div className="mb-6">
+                  <h3 className="text-lg font-bold text-gray-900 mb-3">Specialties</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedExpert.specialties.map((spec, index) => (
+                      <span
+                        key={index}
+                        className="px-3 py-1 bg-primary-100 text-primary-700 rounded-full text-sm font-semibold border-2 border-primary-200"
+                      >
+                        {spec}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Research Interests */}
+              {selectedExpert.research_interests && selectedExpert.research_interests.length > 0 && (
+                <div className="mb-6">
+                  <h3 className="text-lg font-bold text-gray-900 mb-3">Research Interests</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedExpert.research_interests.map((interest, index) => (
+                      <span
+                        key={index}
+                        className="px-3 py-1 bg-accent-100 text-accent-700 rounded-full text-sm font-semibold border-2 border-accent-200"
+                      >
+                        {interest}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Availability Status */}
+              {selectedExpert.availability && (
+                <div className="mb-6">
+                  <div className="p-4 bg-gradient-to-r from-primary-50 to-primary-100 rounded-xl border-2 border-primary-300">
+                    <div className="flex items-center">
+                      <div className="w-3 h-3 bg-primary-500 rounded-full mr-2 animate-pulse"></div>
+                      <p className="text-primary-700 font-bold">Available for consultations</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    setShowProfileModal(false);
+                    handleRequestMeeting(selectedExpert);
+                  }}
+                  className="flex-1 bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-bold py-3 px-6 rounded-xl transition-all duration-200 hover:scale-105 active:scale-95 shadow-lg"
+                >
+                  Request Meeting
+                </button>
+                <button
+                  onClick={() => setShowProfileModal(false)}
+                  className="flex-1 bg-white border-2 border-gray-300 hover:border-gray-400 hover:bg-gray-50 text-gray-700 font-bold py-3 px-6 rounded-xl transition-all duration-200"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

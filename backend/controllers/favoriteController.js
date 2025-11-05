@@ -2,6 +2,24 @@ const { promisePool } = require('../config/database');
 const clinicalTrialsService = require('../services/clinicalTrialsService');
 const pubmedService = require('../services/pubmedService');
 
+// Helper function to retry database queries on connection errors
+const retryQuery = async (queryFn, maxRetries = 3) => {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      return await queryFn();
+    } catch (error) {
+      // Retry on connection errors
+      if ((error.code === 'ECONNRESET' || error.code === 'PROTOCOL_CONNECTION_LOST') && attempt < maxRetries) {
+        console.log(`Database connection error, retrying... (attempt ${attempt}/${maxRetries})`);
+        // Wait a bit before retrying (exponential backoff)
+        await new Promise(resolve => setTimeout(resolve, attempt * 1000));
+        continue;
+      }
+      throw error;
+    }
+  }
+};
+
 // Helper function to check if ID is an external NCT ID
 const isNctId = (id) => {
   return typeof id === 'string' && /^NCT\d+$/i.test(id);
@@ -143,15 +161,38 @@ exports.getFavorites = async (req, res) => {
           case 'expert':
             const [users] = await promisePool.query(
               `SELECT u.id, u.name, u.email, u.user_type,
-                      r.specialties, r.institution, r.bio
+                      r.specialties, r.research_interests, r.institution, r.bio
                FROM Users u
                LEFT JOIN ResearcherProfiles r ON u.id = r.user_id
                WHERE u.id = ?`,
               [fav.item_id]
             );
             details = users[0] || null;
-            if (details && details.specialties) {
-              details.specialties = JSON.parse(details.specialties);
+            if (details) {
+              // Parse specialties - handle JSON array, comma-separated string, or already parsed array
+              if (details.specialties) {
+                if (typeof details.specialties === 'string') {
+                  try {
+                    details.specialties = JSON.parse(details.specialties);
+                  } catch (e) {
+                    // If JSON parse fails, treat as comma-separated string
+                    details.specialties = details.specialties.split(',').map(s => s.trim());
+                  }
+                }
+                // If already an array, leave it as is
+              }
+              // Parse research_interests - handle JSON array, comma-separated string, or already parsed array
+              if (details.research_interests) {
+                if (typeof details.research_interests === 'string') {
+                  try {
+                    details.research_interests = JSON.parse(details.research_interests);
+                  } catch (e) {
+                    // If JSON parse fails, treat as comma-separated string
+                    details.research_interests = details.research_interests.split(',').map(s => s.trim());
+                  }
+                }
+                // If already an array, leave it as is
+              }
             }
             break;
         }
@@ -187,19 +228,24 @@ exports.addFavorite = async (req, res) => {
       });
     }
 
-    // Check if already favorited
-    const [existing] = await promisePool.query(
-      'SELECT id FROM Favorites WHERE user_id = ? AND item_type = ? AND item_id = ?',
-      [userId, item_type, item_id]
+    // Check if already favorited - with retry
+    const [existing] = await retryQuery(() =>
+      promisePool.query(
+        'SELECT id FROM Favorites WHERE user_id = ? AND item_type = ? AND item_id = ?',
+        [userId, item_type, item_id]
+      )
     );
 
     if (existing.length > 0) {
       return res.status(409).json({ error: 'Item already in favorites' });
     }
 
-    const [result] = await promisePool.query(
-      'INSERT INTO Favorites (user_id, item_type, item_id) VALUES (?, ?, ?)',
-      [userId, item_type, item_id]
+    // Insert favorite - with retry
+    const [result] = await retryQuery(() =>
+      promisePool.query(
+        'INSERT INTO Favorites (user_id, item_type, item_id) VALUES (?, ?, ?)',
+        [userId, item_type, item_id]
+      )
     );
 
     res.status(201).json({
@@ -222,9 +268,12 @@ exports.removeFavorite = async (req, res) => {
       return res.status(400).json({ error: 'item_type and item_id are required' });
     }
 
-    const [result] = await promisePool.query(
-      'DELETE FROM Favorites WHERE user_id = ? AND item_type = ? AND item_id = ?',
-      [userId, item_type, item_id]
+    // Delete favorite - with retry
+    const [result] = await retryQuery(() =>
+      promisePool.query(
+        'DELETE FROM Favorites WHERE user_id = ? AND item_type = ? AND item_id = ?',
+        [userId, item_type, item_id]
+      )
     );
 
     if (result.affectedRows === 0) {

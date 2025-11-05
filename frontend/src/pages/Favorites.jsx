@@ -59,12 +59,17 @@ const Favorites = () => {
     }
   };
 
-  const handleRemoveExpert = async (expert) => {
+  const handleRemoveExpert = async (expertId) => {
     try {
+      // Find the expert to get the correct item_type
+      const expert = favoriteExperts.find(e => e.id === expertId);
+      if (!expert) return;
+
       await favoritesApi.remove(expert.item_type, expert.item_id);
-      setFavoriteExperts(prev => prev.filter(item => item.favoriteId !== expert.favoriteId));
+      setFavoriteExperts(prev => prev.filter(item => item.id !== expertId));
     } catch (error) {
       console.error('Error removing expert from favorites:', error);
+      alert('Error removing from favorites. Please try again.');
     }
   };
 
@@ -168,7 +173,7 @@ const Favorites = () => {
                           className="absolute top-4 right-4 z-10 bg-red-500 hover:bg-red-600 text-white rounded-full w-10 h-10 flex items-center justify-center font-bold transition-all transform hover:scale-110 shadow-md"
                           title="Remove from favorites"
                         >
-                          ×
+                          x
                         </button>
                         <TrialCard
                           trial={trial}
@@ -255,22 +260,15 @@ const Favorites = () => {
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {favoriteExperts.map((expert) => (
-                      <div key={expert.favoriteId || expert.id} className="relative">
-                        <button
-                          onClick={() => handleRemoveExpert(expert)}
-                          className="absolute top-4 right-4 z-10 bg-red-500 hover:bg-red-600 text-white rounded-full w-10 h-10 flex items-center justify-center font-bold transition-all transform hover:scale-110 shadow-md"
-                          title="Remove from favorites"
-                        >
-                          ×
-                        </button>
-                        <ExpertCard
-                          expert={expert}
-                          onRequestMeeting={() => {}}
-                          onToggleFollow={handleRemoveExpert}
-                          isFollowing={true}
-                          userType={userType}
-                        />
-                      </div>
+                      <ExpertCard
+                        key={expert.favoriteId || expert.id}
+                        expert={expert}
+                        onRequestMeeting={() => {}}
+                        onToggleFollow={handleRemoveExpert}
+                        onViewProfile={() => {}}
+                        isFollowing={true}
+                        userType={userType}
+                      />
                     ))}
                   </div>
                 )}

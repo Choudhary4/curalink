@@ -16,6 +16,7 @@ import Messages from './pages/Messages';
 import Profile from './pages/Profile';
 import Collaborators from './pages/researcher/Collaborators';
 import CollaborationRequests from './pages/researcher/CollaborationRequests';
+import MeetingRequests from './pages/MeetingRequests';
 import OrcidCallback from './pages/OrcidCallback';
 
 const Layout = ({ children }) => {
@@ -59,6 +60,7 @@ function App() {
             <Route path="/researcher/favorites" element={<Favorites userType="researcher" />} />
 
             {/* Shared Routes */}
+            <Route path="/meetings" element={<MeetingRequests />} />
             <Route path="/messages" element={<Messages />} />
             <Route path="/profile" element={<Profile />} />
           </Routes>

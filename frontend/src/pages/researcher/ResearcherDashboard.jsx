@@ -269,10 +269,10 @@ const ResearcherDashboard = () => {
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex items-center space-x-3">
                         <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-blue-600 rounded-2xl flex items-center justify-center text-white font-bold shadow-lg">
-                          {request.from.charAt(0).toUpperCase()}
+                          {request.from ? request.from.charAt(0).toUpperCase() : '?'}
                         </div>
                         <div>
-                          <h3 className="font-bold text-gray-900">{request.from}</h3>
+                          <h3 className="font-bold text-gray-900">{request.from || 'Unknown'}</h3>
                           <span className={`px-3 py-1 ${request.type === 'patient' ? 'bg-green-100 text-green-700 border-green-200' : 'bg-blue-100 text-blue-700 border-blue-200'} text-xs font-bold rounded-full border shadow-sm`}>
                             {request.type}
                           </span>

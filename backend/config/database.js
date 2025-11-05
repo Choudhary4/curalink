@@ -27,14 +27,19 @@ if (process.env.DATABASE_URL) {
   }
 }
 
-// Create a connection pool
+// Create a connection pool with better error handling
 const pool = mysql.createPool({
   ...dbConfig,
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
   enableKeepAlive: true,
-  keepAliveInitialDelay: 0
+  keepAliveInitialDelay: 0,
+  // Add connection timeout
+  connectTimeout: 60000, // 60 seconds
+  // Automatically reconnect on connection loss
+  maxIdle: 10,
+  idleTimeout: 60000
 });
 
 // Get promise-based pool

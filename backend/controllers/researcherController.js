@@ -151,7 +151,7 @@ exports.getExperts = async (req, res) => {
     const { specialty, availability, user_type } = req.query;
 
     let query = `
-      SELECT u.id, u.name, u.email, u.user_type,
+      SELECT u.id, u.name, u.email, u.user_type, u.profile_picture,
              r.specialties, r.research_interests, r.institution,
              r.availability, r.bio, r.years_experience
       FROM ResearcherProfiles r
@@ -214,7 +214,7 @@ exports.getCollaborators = async (req, res) => {
 
     // Get all researchers except the current user
     const query = userId
-      ? `SELECT u.id, u.name, u.email,
+      ? `SELECT u.id, u.name, u.email, u.profile_picture,
                 r.specialties, r.research_interests, r.institution,
                 r.availability, r.bio
          FROM ResearcherProfiles r
@@ -222,7 +222,7 @@ exports.getCollaborators = async (req, res) => {
          WHERE u.user_type = 'researcher' AND u.id != ?
          ORDER BY RAND()
          LIMIT 50`
-      : `SELECT u.id, u.name, u.email,
+      : `SELECT u.id, u.name, u.email, u.profile_picture,
                 r.specialties, r.research_interests, r.institution,
                 r.availability, r.bio
          FROM ResearcherProfiles r
